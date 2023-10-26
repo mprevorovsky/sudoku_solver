@@ -1,0 +1,345 @@
+Program SUDOKU;
+
+Uses
+  CRT;
+
+Type
+   Matrice = record
+		   Zobraz : char; {zobrazovama hodnota policka}
+                   Cislo : array[1..9] of byte;    {vsechny mozne hodnoty policka,
+                                    0 znamena pro adne pole nepouzitelnou hodnotu}
+                   Barva : byte; {odlisuje zadana policka od vyresenych}
+	     end;
+
+Var
+   Obraz : array[1..9,1..9] of Matrice;
+   Vstup : text;
+
+
+Procedure LoadData; {otevre soubor a nacte do Obraz.[x,y].Zobraz}
+var
+   X : byte;
+   Y : byte;
+   Z : byte;
+begin
+   assign(Vstup,'..\_progs\data.txt');
+   reset(Vstup);
+   for Y:= 1 to 9 do begin
+      for X:= 1 to 9 do begin
+         read(Vstup,Obraz[X,Y].Zobraz);
+         if Obraz[X,Y].Zobraz = '0' then begin
+            Obraz[X,Y].Barva:= 15;            {barva pro vyresna cisla}
+            for Z:= 1 to 9 do Obraz[X,Y].Cislo[Z]:= Z; {povoli vsechny hodnoty pro dane policko}
+         end
+         else begin
+            Obraz[X,Y].Barva:= 12;            {barva pro zadana cisla}
+            for Z:= 1 to 9 do Obraz[X,Y].Cislo[Z]:= 0; {zakaze vsechny hodnoty pro dane policko}
+            Obraz[X,Y].Cislo[ord(Obraz[X,Y].Zobraz)-48]:= ord(Obraz[X,Y].Zobraz)-48;     {pro dane policko
+                                                                              povoli jen zadanou hodnotu}
+         end;
+      end;
+      readln(Vstup);
+   end;
+end;
+
+Procedure VypisObraz; {vytiskne obsah Obraz.Zobraz na obrazovku}
+Var
+   X : byte;
+   Y : byte;
+   I : byte;
+begin
+   clrscr;
+   for I:= 1 to 7 do writeln;
+
+   for Y:= 1 to 3 do begin
+      write('                             ');
+      for X:= 1 to 3 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      textcolor(5);
+      write('| ');
+
+      for X:= 4 to 6 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      textcolor(5);
+      write('| ');
+
+      for X:= 7 to 9 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      writeln;
+   end;
+   textcolor(5);
+   writeln('                             ---------------------');
+
+   for Y:= 4 to 6 do begin
+      write('                             ');
+      for X:= 1 to 3 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      textcolor(5);
+      write('| ');
+
+      for X:= 4 to 6 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      textcolor(5);
+      write('| ');
+
+      for X:= 7 to 9 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      writeln;
+   end;
+   textcolor(5);
+   writeln('                             ---------------------');
+
+   for Y:= 7 to 9 do begin
+      write('                             ');
+      for X:= 1 to 3 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      textcolor(5);
+      write('| ');
+
+      for X:= 4 to 6 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      textcolor(5);
+      write('| ');
+
+      for X:= 7 to 9 do begin
+	 textcolor(Obraz[X,Y].Barva);
+         if Obraz[X,Y].Zobraz = '0' then write('  ')
+         else write(Obraz[X,Y].Zobraz,' ');
+      end;
+      writeln;
+   end;
+   for I:= 1 to 6 do writeln;
+end;
+
+
+{nasleduji procedury resici sudoku}
+
+Procedure ZakazRadek(X, Y, Z : byte);
+var
+   XX : byte;
+begin
+   for XX:= 1 to 9 do
+      if XX <> X then Obraz[XX,Y].Cislo[Z]:= 0;
+end;
+
+
+Procedure ZakazSloupec(X, Y, Z : byte);
+var
+   YY : byte;
+begin
+   for YY:= 1 to 9 do
+      if YY <> Y then Obraz[X,YY].Cislo[Z]:= 0;
+end;
+
+
+Procedure ZakazCtverec(X, Y, Z : byte);
+var
+   XX : byte;
+   YY : byte;
+begin
+   case X of
+      1..3 : case Y of
+                1..3 : for XX:= 1 to 3 do
+                          for YY:= 1 to 3 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+                4..6 : for XX:= 1 to 3 do
+                          for YY:= 4 to 6 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+                7..9 : for XX:= 1 to 3 do
+                          for YY:= 7 to 9 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+             end;
+      4..6 : case Y of
+                1..3 : for XX:= 4 to 6 do
+                          for YY:= 1 to 3 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+                4..6 : for XX:= 4 to 6 do
+                          for YY:= 4 to 6 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+                7..9 : for XX:= 4 to 6 do
+                          for YY:= 7 to 9 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+             end;
+      7..9 : case Y of
+                1..3 : for XX:= 7 to 9 do
+                          for YY:= 1 to 3 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+                4..6 : for XX:= 7 to 9 do
+                          for YY:= 4 to 6 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+                7..9 : for XX:= 7 to 9 do
+                          for YY:= 7 to 9 do if (XX <> X) AND (YY <> Y) then Obraz[XX,YY].Cislo[Z]:= 0;
+             end;
+   end;
+end;
+
+
+Procedure Zakaz; {zakaze vylustenou/zadanou hodnotu (nuluje) v celem radku, sloupci a ctverci}
+Var
+   X : byte;
+   Y : byte;
+begin
+   for X:= 1 to 9 do
+      for Y:= 1 to 9 do
+         if Obraz[X,Y].Zobraz <> '0' then begin
+            ZakazRadek(X, Y, ord(Obraz[X,Y].Zobraz)-48);
+            ZakazSloupec(X, Y, ord(Obraz[X,Y].Zobraz)-48);
+            ZakazCtverec(X, Y, ord(Obraz[X,Y].Zobraz)-48);
+         end;
+end;
+
+{testovat na jedinecnost a pripadne zmenit hodnotu Obraz[x,y].zobraz + vypis}
+
+Function UnikatCislo(X, Y : byte) : boolean;
+var
+   ZZ : byte;
+   C : byte;
+begin
+   C:= 0;
+   for ZZ:= 1 to 9 do if Obraz[X,Y].Cislo[ZZ] <> 0 then C:= C + 1;
+   if C = 1 then UnikatCislo:= true
+   else UnikatCislo:= false;
+end;
+
+
+Function UnikatRadek(X, Y, Z : byte) : boolean;
+var
+   XX : byte;
+   C : byte;
+begin
+   C:= 0;
+   for XX:= 1 to 9 do
+      if Obraz[XX,Y].Cislo[Z] <> 0 then C:= C + 1;
+   if C = 1 then UnikatRadek:= true
+   else UnikatRadek:= false;
+end;
+
+Function UnikatSloupec(X, Y, Z : byte) : boolean;
+var
+   YY : byte;
+   C : byte;
+begin
+   C:= 0;
+   for YY:= 1 to 9 do
+      if Obraz[X,YY].Cislo[Z] <> 0 then C:= C + 1;
+   if C = 1 then UnikatSloupec:= true
+   else UnikatSloupec:= false;
+end;
+
+Function UnikatCtverec(X, Y, Z : byte) : boolean;
+var
+   XX : byte;
+   YY : byte;
+   C : byte;
+begin
+   C:= 0;
+   case X of
+      1..3 : case Y of
+                1..3 : for XX:= 1 to 3 do
+                          for YY:= 1 to 3 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+                4..6 : for XX:= 1 to 3 do
+                          for YY:= 4 to 6 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+                7..9 : for XX:= 1 to 3 do
+                          for YY:= 7 to 9 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+             end;
+      4..6 : case Y of
+                1..3 : for XX:= 4 to 6 do
+                          for YY:= 1 to 3 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+                4..6 : for XX:= 4 to 6 do
+                          for YY:= 4 to 6 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+                7..9 : for XX:= 4 to 6 do
+                          for YY:= 7 to 9 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+             end;
+      7..9 : case Y of
+                1..3 : for XX:= 7 to 9 do
+                          for YY:= 1 to 3 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+                4..6 : for XX:= 7 to 9 do
+                          for YY:= 4 to 6 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+                7..9 : for XX:= 7 to 9 do
+                          for YY:= 7 to 9 do if Obraz[XX,YY].Cislo[Z] <> 0 then C:= C + 1;
+             end;
+   end;
+   if C = 1 then UnikatCtverec:= true
+   else UnikatCtverec:= false;
+end;
+
+
+Procedure ZapisCislo(X, Y, Z : byte); {Vypise unikatni cislo a vynuluje zbytek moznosti pro dane pole}
+var
+   I : byte;
+begin
+   Obraz[X,Y].Zobraz:= chr(Z+48);
+   for I:= 1 to 9 do
+      if I <> Z then Obraz[X,Y].Cislo[I]:= 0;
+end;
+
+
+
+Procedure Unikat;
+var
+   X : byte;
+   Y : byte;
+   Z : byte;
+begin
+   for X:= 1 to 9 do
+      for Y:= 1 to 9 do
+         if Obraz[X,Y].Zobraz = '0' then begin
+            if UnikatCislo(X, Y) = true then
+               for Z:= 1 to 9 do if Obraz[X,Y].Cislo[Z] <> 0 then begin
+                  ZapisCislo(X, Y, Z);
+	          VypisObraz;
+		  exit;
+               end;
+
+            for Z:= 1 to 9 do if Obraz[X,Y].Cislo[Z] <> 0 then
+               if ((UnikatRadek(X, Y, Z) = true) OR (UnikatSloupec(X, Y, Z) = true) OR (UnikatCtverec(X, Y, Z) = true))
+               then begin
+                  ZapisCislo(X, Y, Z);
+                  VypisObraz;
+                  exit;
+               end;
+          end;
+end;
+
+
+Function Konec : boolean;
+var
+   X : byte;
+   Y : byte;
+   C : byte;
+begin
+   C:= 0;
+   for X:= 1 to 9 do
+      for Y:= 1 to 9 do
+         if Obraz[X,Y].Zobraz <> '0' then C:= C + 1;
+   if C <> 81 then Konec:= false
+   else Konec:= true;
+end;
+
+
+begin
+   LoadData;
+   VypisObraz;
+   readkey;
+   repeat
+      Zakaz;
+      Unikat;
+   until Konec = true;
+   readkey;
+end.
